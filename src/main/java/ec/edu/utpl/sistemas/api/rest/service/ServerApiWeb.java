@@ -12,8 +12,8 @@ import static spark.Spark.*;
 
 public class ServerApiWeb {
     public static void main(String[] args) {
-        Gson gson = new Gson();
-        ListStudent listStudent = new ListStudent();
+        var gson = new Gson();
+        var listStudent = new ListStudent();
 
         options("/*",
                 (req, res) -> {
@@ -85,13 +85,10 @@ public class ServerApiWeb {
         });
 
         post("/student", (req, res) -> {
-            int id;
-            Student newStudent;
-
             if(req.body() != null && !req.body().trim().equals("")) {
-                newStudent = gson.fromJson(req.body(), Student.class);
+                var newStudent = gson.fromJson(req.body(), Student.class);
                 listStudent.getStudents().add(newStudent);
-                id = listStudent.getStudents().size() - 1;
+                var id = listStudent.getStudents().size() - 1;
                 printList(listStudent.getStudents());
 
                 res.status(201);
@@ -103,15 +100,12 @@ public class ServerApiWeb {
         });
 
         put("/student/:pos", (req, res) -> {
-            int pos;
-            Student student;
-
-            pos = NumberUtils.toInt(req.params(":pos"), -1);
+            var pos = NumberUtils.toInt(req.params(":pos"), -1);
 
             if(pos != -1) {
                 if(pos >= 0 && pos < listStudent.getStudents().size()) {
                     if(req.body() != null && !req.body().trim().equals("")) {
-                        student = gson.fromJson(req.body(), Student.class);
+                        var student = gson.fromJson(req.body(), Student.class);
                         listStudent.getStudents().set(pos, student);
                         printList(listStudent.getStudents());
                         res.status(204);
