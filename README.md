@@ -1,4 +1,4 @@
-# restuflapi
+# restfulapi
 Simple API restful to manage a list of students. It is only to educational purpose.
 
 The project is based on the following libraries:
