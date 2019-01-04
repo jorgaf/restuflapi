@@ -5,12 +5,14 @@ import ec.edu.utpl.sistemas.api.rest.model.ListStudent;
 import ec.edu.utpl.sistemas.api.rest.model.Student;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
 public class ServerApiWeb {
+
     public static void main(String[] args) {
         var gson = new Gson();
         var listStudent = new ListStudent();
@@ -35,9 +37,9 @@ public class ServerApiWeb {
                 });
 
         before((req, res) -> {
-            /*if (!req.headers("Accept").equalsIgnoreCase("application/json")) {
+            if (!req.headers("Accept").equalsIgnoreCase("application/json")) {
                 halt(406);
-            }*/
+            }
             res.header("Access-Control-Allow-Origin", "*");
         });
 
@@ -64,28 +66,40 @@ public class ServerApiWeb {
         });
 
         get("/students/filter", (req, res) -> {
+            List<Student> output = Collections.emptyList();
             if(req.queryMap().hasKey("name")) {
-                return gson.toJson(listStudent.getStudents().
+                output = listStudent.getStudents().
                         stream().
-                        filter(s -> s.getName().equalsIgnoreCase(req.queryMap().get("name").value())).
-                        collect(Collectors.toList()));
+                        filter(s -> s.getName().toLowerCase().startsWith(req.queryMap().get("name").value().toLowerCase())).
+                        collect(Collectors.toList());
             } else if(req.queryMap().hasKey("lastname")) {
-                return gson.toJson(listStudent.getStudents().
+                output = listStudent.getStudents().
                         stream().
-                        filter(s -> s.getLastName().equalsIgnoreCase(req.queryMap().get("lastname").value()))
-                        .collect(Collectors.toList()));
+                        filter(s -> s.getLastName().toLowerCase().startsWith(req.queryMap().get("lastname").value().toLowerCase()))
+                        .collect(Collectors.toList());
             } else if(req.queryMap().hasKey("age")) {
-                return gson.toJson(listStudent.getStudents().
-                        stream().
-                        filter(s -> s.getAge() == req.queryMap().get("age").integerValue()).
-                        collect(Collectors.toList()));
+                int age = NumberUtils.toInt(req.queryMap().get("age").value(), -1);
+                if(age != -1) {
+                    output = listStudent.getStudents().
+                            stream().
+                            filter(s -> s.getAge() == age).
+                            collect(Collectors.toList());
+                } else {
+                    halt(400);
+                }
+            } else {
+                halt(400);
             }
-            halt(400);
+            if(output.size() > 0) {
+                return gson.toJson(output);
+            } else {
+                halt(404);
+            }
             return "";
         });
 
         post("/student", (req, res) -> {
-            if(req.body() != null && !req.body().trim().equals("")) {
+            if(!req.body().isBlank()) {
                 var newStudent = gson.fromJson(req.body(), Student.class);
                 listStudent.getStudents().add(newStudent);
                 var id = listStudent.getStudents().size() - 1;
@@ -104,7 +118,7 @@ public class ServerApiWeb {
 
             if(pos != -1) {
                 if(pos >= 0 && pos < listStudent.getStudents().size()) {
-                    if(req.body() != null && !req.body().trim().equals("")) {
+                    if(!req.body().isBlank()) {
                         var student = gson.fromJson(req.body(), Student.class);
                         listStudent.getStudents().set(pos, student);
                         printList(listStudent.getStudents());
