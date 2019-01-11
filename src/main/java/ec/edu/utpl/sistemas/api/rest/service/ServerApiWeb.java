@@ -37,7 +37,8 @@ public class ServerApiWeb {
                 });
 
         before((req, res) -> {
-            if (!req.headers("Accept").equalsIgnoreCase("application/json")) {
+
+            if (!req.requestMethod().equalsIgnoreCase("options") && !req.headers("Accept").equalsIgnoreCase("application/json")) {
                 halt(406);
             }
             res.header("Access-Control-Allow-Origin", "*");
